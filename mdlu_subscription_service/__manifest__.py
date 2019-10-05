@@ -23,7 +23,7 @@
     # for the full list
     'category': 'Uncategorized',
     'version': '1.0',
-
+    'images': ['static/description/banner.png'],
     # any module necessary for this one to work correctly
     'depends': [
         'base',
