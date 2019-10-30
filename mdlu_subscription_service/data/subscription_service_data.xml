@@ -16,7 +16,7 @@
   </data>
   <data noupdate="1">
     <record id="seq_subscription_service" model="ir.sequence">
-      <field name="name">Subscription Services</field>
+      <field name="name">Subscription Services: Sequence</field>
       <field name="code">subscription.service</field>
       <field name="padding">3</field>
       <field eval="1" name="number_next"/>

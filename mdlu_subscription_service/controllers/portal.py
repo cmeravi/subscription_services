@@ -72,7 +72,7 @@ class CustomerPortal(CustomerPortal):
         request.session['my_subscriptions_history'] = accounts.ids[:100]
 
         values.update({
-            'accounts': accounts,
+            'accounts': accounts.sudo(),
             'page_name': 'subscription',
             'pager': pager,
             'archive_groups': archive_groups,
@@ -106,7 +106,7 @@ class CustomerPortal(CustomerPortal):
             'display_close': display_close,
             'message': message,
             'token': access_token,
-            'return_url': '/shop/payment/validate',
+            'return_url': '/my',
             'bootstrap_formatting': True,
             'partner_id': sbscr_sudo.partner_id.id,
         }

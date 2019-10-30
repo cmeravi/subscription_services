@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="mdlu_sub_view_move_form" model="ir.ui.view">
+    <field name="name">mdlu.sub.view.move.form</field>
+    <field name="model">account.move</field>
+    <field name="inherit_id" ref="product.product_template_search_view"/>
+    <field name="arch" type="xml">
+      <xpath expr="//page[@name='other_info']" position="inside">
+        <group id="subscription_information" name="sub_info" string="Subscription Information">
+          <field name="subscription_id"/>
+        </group>
+      </xpath>
+    </field>
+  </record>
+</odoo>

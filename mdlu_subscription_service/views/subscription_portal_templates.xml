@@ -95,7 +95,7 @@
 
                                 <!-- ======  Costumer Informations  ====== -->
                                 <div class="col-12 col-lg-5 offset-lg-1">
-                                    <h5 class="mb-1">Your informations</h5>
+                                    <h5 class="mb-1">Your information</h5>
                                     <hr class="my-0"/>
                                     <div t-field="subscription_service.partner_id" t-options='{ "widget": "contact", "fields": [ "name", "address", "phone", "email"]}'/>
                                     <a t-if="subscription_service.partner_id" class="small" t-attf-href="/my/account?redirect=/my/subscriptions/#{subscription_service.id}">(Wrong address?)</a>
@@ -166,10 +166,10 @@
                     <br/>
 
                     <!-- Open Invoices -->
-                    <div t-if="not subscription_service.invoice_ids.filtered(lambda inv: inv.state == 'open')">
+                    <div t-if="not subscription_service.invoice_ids.filtered(lambda inv: inv.state == 'posted' and inv.invoice_payment_state != 'paid')">
                         <p></p>
                     </div>
-                    <div t-if="subscription_service.invoice_ids.filtered(lambda inv: inv.state == 'open')" t-call="portal.portal_table">
+                    <div t-if="subscription_service.invoice_ids.filtered(lambda inv: inv.state == 'posted' and inv.invoice_payment_state != 'paid')" t-call="portal.portal_table">
                       <div class="card">
                         <h3>Open Invoices</h3>
                           <thead>
@@ -181,28 +181,28 @@
                                 <th class="text-right">Amount Due</th>
                             </tr>
                           </thead>
-                          <t t-foreach="subscription_service.invoice_ids.filtered(lambda inv: inv.state == 'open')" t-as="invoice">
+                          <t t-foreach="subscription_service.invoice_ids.filtered(lambda inv: inv.state == 'posted' and inv.invoice_payment_state != 'paid')" t-as="invoice">
                             <tr>
                                 <td>
-                                    <a t-att-href="invoice.get_portal_url()" t-att-title="invoice.number">
-                                        <t t-esc="invoice.number" t-if="invoice.number"/>
+                                    <a t-att-href="invoice.get_portal_url()" t-att-title="invoice.name">
+                                        <t t-esc="invoice.name" t-if="invoice.name"/>
                                         <em t-else="">Draft Invoice</em>
                                     </a>
                                 </td>
-                                <td><span t-field="invoice.date_invoice"/></td>
-                                <td class='d-none d-md-table-cell'><span t-field="invoice.date_due"/></td>
+                                <td><span t-field="invoice.invoice_date_due"/></td>
+                                <td class='d-none d-md-table-cell'><span t-field="invoice.invoice_date_due"/></td>
                                 <td class="tx_status">
-                                    <t t-if="invoice.state == 'open'">
+                                    <t t-if="invoice.invoice_payment_state in ['not_paid','in_payment']">
                                         <span class="badge badge-pill badge-info"><i class="fa fa-fw fa-clock-o" aria-label="Opened" title="Opened" role="img"></i><span class="d-none d-md-inline"> Waiting for Payment</span></span>
                                     </t>
-                                    <t t-if="invoice.state == 'paid'">
+                                    <t t-if="invoice.invoice_payment_state == 'paid'">
                                         <span class="badge badge-pill badge-success"><i class="fa fa-fw fa-check" aria-label="Paid" title="Paid" role="img"></i><span class="d-none d-md-inline"> Paid</span></span>
                                     </t>
                                     <t t-if="invoice.state == 'cancel'">
                                         <span class="badge badge-pill badge-warning"><i class="fa fa-fw fa-remove" aria-label="Cancelled" title="Cancelled" role="img"></i><span class="d-none d-md-inline"> Cancelled</span></span>
                                     </t>
                                 </td>
-                                <td class="text-right"><span t-esc="-invoice.residual if invoice.type == 'out_refund' else invoice.residual" t-options='{"widget": "monetary", "display_currency": invoice.currency_id}'/></td>
+                                <td class="text-right"><span t-esc="invoice.amount_residual if invoice.type == 'out_refund' else invoice.amount_residual" t-options='{"widget": "monetary", "display_currency": invoice.currency_id}'/></td>
                             </tr>
                           </t>
                       </div>
@@ -247,9 +247,12 @@
     <!-- Modify portal templates -->
     <template id="portal_my_home_menu_subscription" name="Portal layout : subscription menu entry" inherit_id="portal.portal_breadcrumbs" priority="10">
         <xpath expr="//ol[hasclass('o_portal_submenu')]" position="inside">
-            <li t-if="page_name == 'subscription' or account" t-attf-class="breadcrumb-item #{'active ' if not account else ''}">
-                <a t-if="account" t-attf-href="/my/subscriptions?{{ keep_query() }}">Subscriptions</a>
+            <li t-if="page_name == 'subscription' or subscription_service" t-attf-class="breadcrumb-item #{'active ' if not account else ''}">
+                <a t-if="subscription_service" t-attf-href="/my/subscriptions?{{ keep_query() }}">Subscriptions</a>
                 <t t-else="">Subscriptions</t>
+            </li>
+            <li t-if="subscription_service" class="breadcrumb-item active">
+              <t t-esc="subscription_service.name" t-if="subscription_service.name"/>
             </li>
         </xpath>
     </template>

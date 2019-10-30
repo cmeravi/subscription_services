@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from odoo import api, fields, models, _
 from odoo.exceptions import UserError
 import odoo.addons.decimal_precision as dp
-from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT, DEFAULT_SERVER_DATE_FORMAT
+
 import logging
 _logger = logging.getLogger(__name__)
 
@@ -25,12 +25,17 @@ PRODUCT_DOMAIN = {
     'sale': 'so_subscription',
 }
 
+LINE_ACCOUNT_ID = {
+    'purchase': 'expense',
+    'sale': 'income',
+}
+
 class SubscriptionService(models.Model):
     _name = 'subscription.service'
     _description = 'Subscription Service'
     _inherit = ['portal.mixin', 'mail.thread', 'mail.activity.mixin']
 
-    @api.multi
+    @api.model
     def _compute_invoice_count(self):
         """ Compute the number of invoices """
         for sub in self:
@@ -56,7 +61,7 @@ class SubscriptionService(models.Model):
             help="The next invoice will be created on this date then the period will be extended.")
     recurring_total = fields.Float(compute='_compute_recurring_total', string="Recurring Price", store=True)
     user_id = fields.Many2one('res.users', string='Sales Rep')
-    invoice_ids = fields.One2many('account.invoice', 'subscription_id')
+    invoice_ids = fields.One2many('account.move', 'subscription_id')
     invoice_count = fields.Integer(compute='_compute_invoice_count')
     code = fields.Char(string='Reference', index=True, readonly=True)
     currency_id = fields.Many2one('res.currency', string='Currency')
@@ -122,7 +127,6 @@ class SubscriptionService(models.Model):
             vals['name'] = vals['code']
         return super(SubscriptionService, self).create(vals)
 
-    @api.multi
     def write(self,vals):
         rec = super(SubscriptionService, self).write(vals)
         if self.code and '-' in self.code:
@@ -132,17 +136,20 @@ class SubscriptionService(models.Model):
         return rec
 
     #define button for viewing the invoices
-    @api.multi
     def action_view_invoice(self):
+        # self = self.env['subscription.service'].search([('id','=',id)])
         invoices = self.mapped('invoice_ids')
-        action = self.env.ref('account.action_invoice_tree1').read()[0]
+        return self.view_invoices(invoices)
+
+    @api.model
+    def view_invoices(self,invoices):
+        action = self.env.ref('account.action_move_out_invoice_type').read()[0]
+        if self.type == 'purchase':
+            action = self.env.ref('account.action_move_in_invoice_type').read()[0]
         if len(invoices) > 1:
             action['domain'] = [('id', 'in', invoices.ids)]
         elif len(invoices) == 1:
-            if self.type == 'purchase':
-                action['views'] = [(self.env.ref('account.invoice_supplier_form').id, 'form')]
-            elif self.type == 'sale':
-                action['views'] = [(self.env.ref('account.invoice_form').id, 'form')]
+            action['views'] = [(self.env.ref('account.view_move_form').id, 'form')]
             action['res_id'] = invoices.ids[0]
         else:
             action = {'type': 'ir.actions.act_window_close'}
@@ -167,33 +174,27 @@ class SubscriptionService(models.Model):
 
         return dict(pending=subscriptions_pending.ids, closed=subscriptions_close.ids)
 
-    @api.model
     def _cron_recurring_create_invoice(self):
         """ If subscribed, create an invoice """
         return self._recurring_create_invoice(automatic=True)
 
-    @api.multi
     def set_open(self):
         """ Set the subscription status to 'open' """
         return self.write({'state': 'open'})
 
-    @api.multi
     def set_pending(self):
         """ Set the subscription status to 'pending' """
         return self.write({'state': 'pending'})
 
-    @api.multi
     def set_cancel(self):
         """ Set the subscription status to 'cancel' """
         return self.write({'state': 'cancel'})
 
-    @api.multi
     def set_close(self):
         """ Set the subscription status to 'close' """
         return self.write({'state': 'close', 'date_end': fields.Date.from_string(fields.Date.today())})
 
-    @api.multi
-    def _prepare_invoice_data(self):
+    def _prepare_invoice(self):
         """ Prepare the data of the invoice """
         self.ensure_one()
 
@@ -202,159 +203,76 @@ class SubscriptionService(models.Model):
                 _("You must first select a Customer for Subscription %s!") % self.name)
 
         """ Get the fiscal position of the company """
-        fpos_id = self.env['account.fiscal.position'].with_context(
-            force_company=self.company_id.id).get_fiscal_position(self.partner_id.id)
+        fpos_id = self.env['account.fiscal.position'].with_context(force_company=self.company_id.id).get_fiscal_position(self.partner_id.id)
         """ Get the subscription journal of the company """
-        journal = self.env['account.journal'].search(
-            [('type', '=', self.type), ('company_id', '=', self.company_id.id)], limit=1)
+        journal = self.env['account.journal'].search([('type', '=', self.type), ('company_id', '=', self.company_id.id)], limit=1)
         if not journal:
             raise UserError(_('Please define a %s journal for the company "%s".') % (self.type, self.company_id.name or '', ))
 
         next_date = fields.Date.from_string(self.recurring_next_date)
         periods = {'daily': 'days', 'weekly': 'weeks',
                    'monthly': 'months', 'yearly': 'years'}
-        new_date = next_date + \
-            relativedelta(
-                **{periods[self.recurrency]: self.recurring_interval})
+        new_date = next_date +relativedelta(**{periods[self.recurrency]: self.recurring_interval})
 
-        return {
-            'account_id': self.partner_id.property_account_payable_id.id,
+        vals = {
+            'invoice_payment_state': 'not_paid',
             'type': INV_TYPE[self.type],
             'partner_id': self.partner_id.id,
             'journal_id': journal.id,
-            'date_invoice': self.recurring_next_date,
-            'origin': self.code,
+            'invoice_date': self.recurring_next_date,
+            'invoice_origin': self.code,
             'fiscal_position_id': fpos_id,
             'currency_id': self.currency_id and self.currency_id.id or False,
-            'payment_term_id': self.payment_term_id and self.payment_term_id.id
+            'invoice_payment_term_id': self.payment_term_id and self.payment_term_id.id
                                 or self.partner_id.property_supplier_payment_term_id.id,
             'company_id': self.company_id.id,
-            'comment': _("This invoice covers the following period: %s - %s") % (next_date, new_date),
+            'invoice_line_ids': [],
+            'invoice_user_id': self.user_id.id,
+            # 'comment': _("This invoice covers the following period: %s - %s") % (next_date, new_date),
         }
 
-    @api.multi
-    def _prepare_invoice_line(self, line, fiscal_position):
-        """ Prepare the invoice line """
-        account_id = line.product_id.property_account_expense_id.id
-        if not account_id:
-            account_id = line.product_id.categ_id.property_account_expense_categ_id.id
-        account_id = fiscal_position.map_account(account_id)
+        for line in self.recurring_invoice_line_ids:
+            vals['invoice_line_ids'].append((0,0,line._prepare_invoice_line()))
 
-        tax = self.env['account.tax']
-        if 'purchase' == line.subscription_serv_id.type:
-            tax = line.product_id.supplier_taxes_id.filtered(lambda r: r.company_id == line.subscription_serv_id.company_id)
-        elif 'sale' == line.subscription_serv_id.type:
-            tax = line.product_id.taxes_id.filtered(lambda r: r.company_id == line.subscription_serv_id.company_id)
-        tax = fiscal_position.map_tax(tax)
-        return {
-            'name': line.name,
-            'account_id': account_id,
-            'account_analytic_id': line.analytic_account_id.id,
-            'analytic_tag_ids': [(6, 0, line.analytic_tag_ids.ids)],
-            'price_unit': line.unit_price or 0.0,
-            'discount': line.discount,
-            'quantity': line.qty,
-            'uom_id': line.uom_id.id,
-            'product_id': line.product_id.id,
-            'invoice_line_tax_ids': [(6, 0, tax.ids)],
-        }
+        invoice_id = self.env['account.move'].create(vals)
+        return invoice_id
 
-    @api.multi
-    def _prepare_invoice_lines(self, fiscal_position):
-        """ Prepare the invoice lines """
-        self.ensure_one()
-        fiscal_position = self.env[
-            'account.fiscal.position'].browse(fiscal_position)
-        return [(0, 0, self._prepare_invoice_line(line, fiscal_position)) for line in self.recurring_invoice_line_ids]
-
-    @api.multi
-    def _prepare_invoice(self):
-        """ Prepare the invoice """
-        invoice = self._prepare_invoice_data()
-        invoice['invoice_line_ids'] = self._prepare_invoice_lines(
-            invoice['fiscal_position_id'])
-        return invoice
-
-    @api.multi
     def recurring_invoice(self):
         """ Reccuring the invoice """
-        self._recurring_create_invoice()
-        return self.action_subscription_invoice()
+        invoices = self._recurring_create_invoice()
+        self.view_invoices(invoices)
 
-    @api.multi
-    def action_subscription_invoice(self):
-        """ Show the invoices views """
-        views = []
-        if 'purchase' == self.type:
-            views = [[self.env.ref('account.invoice_supplier_tree').id, "tree"],
-                      [self.env.ref('account.invoice_supplier_form').id, "form"]]
-        elif 'sale' == self.type:
-            views = [[self.env.ref('account.invoice_tree').id, "tree"],
-                      [self.env.ref('account.invoice_form').id, "form"]]
-        return {
-            "type": "ir.actions.act_window",
-            "res_model": "account.invoice",
-            "views": views,
-            "domain": [["id", "in", self.invoice_ids.ids]],
-            "context": {"create": False},
-            "name": "Invoices",
-        }
-
-    @api.returns('account.invoice')
+    @api.returns('account.move')
     def _recurring_create_invoice(self, automatic=False):
-        AccountInvoice = self.env['account.invoice']
-        invoices = self.env['account.invoice']
+        invoices = self.env['account.move']
         current_date = fields.Date.today()
         periods = {'daily': 'days', 'weekly': 'weeks',
                    'monthly': 'months', 'yearly': 'years'}
         domain = [('id', 'in', self.ids)] if self.ids else [
-            ('recurring_next_date', '<=', current_date), ('state', '=', 'open')]
-        sub_data = self.search_read(fields=['id', 'company_id'], domain=domain)
-        for company_id in set(data['company_id'][0] for data in sub_data):
-            sub_ids = map(lambda s: s['id'], filter(
-                lambda s: s['company_id'][0] == company_id, sub_data))
-            subs = self.with_context(
-                company_id=company_id, force_company=company_id).browse(sub_ids)
-            for sub in subs:
-                try:
-                    invoices |= AccountInvoice.create(sub._prepare_invoice())
-                    sub.invoice_ids = [(4, invoices[-1].id, _)]
-                    invoices[-1].compute_taxes()
-                    if sub.payment_term_id:
-                        invoices[-1].write({'payment_term_id': sub.payment_term_id.id})
-                    next_date = fields.Date.from_string(
-                        sub.recurring_next_date or current_date)
-                    rule, interval = sub.recurrency, sub.recurring_interval
-                    new_date = next_date + \
-                        relativedelta(**{periods[rule]: interval})
-                    sub.write({'recurring_next_date': new_date})
-                    if automatic:
-                        self.env.cr.commit()
-                    body = 'A new invoice has been created for subscription %s' % (sub.display_name)
-                    sub.message_post(body=body, message_type='comment',**{'subtype_id': 1})
-                except Exception:
-                    if automatic:
-                        self.env.cr.rollback()
-                        _logger.exception(
-                            'Fail to create recurring invoice for subscription %s', sub.code)
-                    else:
-                        raise
-        invoices.action_invoice_open()
+            ('recurring_next_date', '<=', current_date+relativedelta(weeks=1)), ('state', '=', 'open')]
+        subs = self.search(domain)
+        for sub in subs:
+            try:
+                # Create and assign the new invoice
+                invoice = sub._prepare_invoice()
+                sub.invoice_ids = [(4, invoice.id, _)]
+                invoices |= invoice
+                # Update the next recurring date
+                next_date = fields.Date.from_string(sub.recurring_next_date or current_date)
+                rule, interval = sub.recurrency, sub.recurring_interval
+                new_date = next_date + relativedelta(**{periods[rule]: interval})
+                sub.write({'recurring_next_date': new_date})
+                #Notify Followers of the new invoice
+                body = 'A new invoice has been created for subscription %s' % (sub.display_name)
+                sub.message_post(body=body, message_type='comment',**{'subtype_id': 1})
+            except Exception:
+                if automatic:
+                    self.env.cr.rollback()
+                    _logger.exception(
+                        'Fail to create recurring invoice for subscription %s', sub.code)
+                else:
+                    raise
         return invoices
-
-    @api.multi
-    def increment_period(self):
-        """ Get the date of the next occurrence """
-        for account in self:
-            current_date = account.recurring_next_date or self.default_get(
-                ['recurring_next_date'])['recurring_next_date']
-            periods = {'daily': 'days', 'weekly': 'weeks',
-                       'monthly': 'months', 'yearly': 'years'}
-            new_date = fields.Date.from_string(current_date) + relativedelta(
-                **{periods[account.recurrency]: account.recurring_interval})
-            account.write({'recurring_next_date': new_date})
-
-
 
 
 class SubscriptionServiceLine(models.Model):
@@ -410,3 +328,28 @@ class SubscriptionServiceLine(models.Model):
         if sub_type:
             product_ids = self.env['product.product'].search([(PRODUCT_DOMAIN[sub_type],'=', True)]).mapped('id')
         return {'domain': {'product_id': [('id', 'in', product_ids)],},}
+
+    @api.onchange('sub_line_tax_ids')
+    def set_tax_domain(self):
+        tax_ids = []
+        sub_type = self._context.get('type')
+        if sub_type:
+            tax_ids = self.env['account.tax'].search([('type_tax_use','=', sub_type)]).mapped('id')
+        return {'domain': {'sub_line_tax_ids': [('id', 'in', tax_ids)],},}
+
+
+    def _prepare_invoice_line(self):
+        self.ensure_one()
+        vals = {
+            'name': self.name,
+            'analytic_account_id':self. analytic_account_id.id,
+            'analytic_tag_ids': [[6,0,self.analytic_tag_ids.ids]],
+            'product_id': self.product_id.id,
+            'quantity': self.qty,
+            'product_uom_id': self.uom_id.id,
+            'price_unit': self.unit_price,
+            'discount': self.discount,
+            'tax_ids': [[6,0,self.sub_line_tax_ids.ids]],
+        }
+
+        return vals

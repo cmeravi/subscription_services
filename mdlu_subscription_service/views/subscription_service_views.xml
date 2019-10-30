@@ -33,21 +33,18 @@
           <group name="main">
               <group>
                 <field name="type"/>
-                <field name="partner_id" required="1" domain="[('supplier', '=', True)]"/>
+                <field name="partner_id"/>
                 <field name="code"/>
                 <field name="recurrency"/>
                 <field name="recurring_interval"/>
                 <label for="recurring_next_date" string="Date of Next Invoice"/>
                 <div>
                   <field name="recurring_next_date"/>
-                  <button string="&#8658; Generate Invoice" class="oe_link" name="recurring_invoice"
-                          type="object" />
+                  <button string="&#8658; Generate Invoice" class="oe_link" name="recurring_invoice" type="object"/>
                 </div>
               </group>
               <group>
               	<label for="user_id" string="Representative"/>
-                <!-- <label for="user_id" t-if="type == 'purchase'" string="Purchase Rep"/>
-                <label for="user_id" t-if="type == 'sale'" string="Sales Rep"/> -->
                 <field name="user_id" nolabel="1"/>
                 <field name="company_id" groups="base.group_multi_company"/>
                 <field name="currency_id" required="1"/>
@@ -178,7 +175,6 @@
     <record id="subscription_service_action" model="ir.actions.act_window">
         <field name="name">Subscriptions Services</field>
         <field name="res_model">subscription.service</field>
-        <field name="view_type">form</field>
         <field name="view_mode">tree,form,pivot,graph</field>
         <field name="context">{'search_default_user_id':uid, 'user_id': uid,}</field>
         <field name="help" type="html">
@@ -207,7 +203,6 @@
     <record id="subscription_service_action_pending" model="ir.actions.act_window">
         <field name="name">Subscriptions to Renew</field>
         <field name="res_model">subscription.service</field>
-        <field name="view_type">form</field>
         <field name="view_mode">tree,form,pivot,graph</field>
         <field name="context">{'search_default_user_id':uid, 'search_default_pending':1, 'search_default_renew':1}</field>
         <field name="help" type="html">
