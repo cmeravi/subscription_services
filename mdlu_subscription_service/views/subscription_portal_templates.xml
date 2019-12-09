@@ -13,19 +13,19 @@
                     <t t-set="entries">
                         <ul class="list-group list-group-flush flex-wrap flex-row flex-lg-column">
                             <li class="list-group-item flex-grow-1">
-                                <div><strong>Next Invoice: <span t-field="subscription_service.recurring_next_date"/></strong></div>
+                                <div><strong>Next Invoice: <span t-field="subscription.recurring_next_date"/></strong></div>
                             </li>
 
-                            <li t-if="subscription_service.user_id" class="list-group-item flex-grow-1">
+                            <li t-if="subscription.user_id" class="list-group-item flex-grow-1">
                                 <div class="small mb-1"><strong class="text-muted">Subscription Manager:</strong></div>
                                 <div class="row flex-nowrap">
                                     <div class="col flex-grow-0 pr-2">
-                                        <img class="rounded-circle mr4 float-left o_portal_contact_img" t-if="subscription_service.user_id.image" t-attf-src="data:image/png;base64,#{subscription_service.user_id.image}" alt="Contact"/>
-                                        <img class="rounded-circle mr4 float-left o_portal_contact_img" t-if="not subscription_service.user_id.image" src="/web/static/src/img/placeholder.png" alt="Contact"/>
+                                        <img class="rounded-circle mr4 float-left o_portal_contact_img" t-if="subscription.user_id.image" t-attf-src="data:image/png;base64,#{subscription.user_id.image}" alt="Contact"/>
+                                        <img class="rounded-circle mr4 float-left o_portal_contact_img" t-if="not subscription.user_id.image" src="/web/static/src/img/placeholder.png" alt="Contact"/>
                                     </div>
                                     <div class="col pl-0" style="min-width: 150px">
-                                        <span t-field="subscription_service.user_id" t-options='{"widget": "contact", "fields": ["name", "phone"], "no_marker": True}'/>
-                                        <a t-if="subscription_service.user_id.email" t-attf-href="mailto:{{subscription_service.user_id.email}}" class="small"><i class="fa fa-envelope"></i> Send email</a>
+                                        <span t-field="subscription.user_id" t-options='{"widget": "contact", "fields": ["name", "phone"], "no_marker": True}'/>
+                                        <a t-if="subscription.user_id.email" t-attf-href="mailto:{{subscription.user_id.email}}" class="small"><i class="fa fa-envelope"></i> Send email</a>
                                     </div>
                                 </div>
                             </li>
@@ -42,12 +42,12 @@
                         <div class="card-header bg-white pb-2 pt-3">
                             <div class="row">
                                 <div class="col-12 col-lg flex-grow-1 mb-1 mb-lg-0">
-                                    <h4 class="mb-0"><small class="text-muted">Subscription -</small> <span t-field="subscription_service.display_name"/></h4>
+                                    <h4 class="mb-0"><small class="text-muted">Subscription -</small> <span t-field="subscription.name"/></h4>
                                 </div>
                                 <div class="col-12 col-lg flex-grow-0 text-lg-right mb-1 mb-lg-0">
-                                    <span t-if="subscription_service.state == 'open' and not subscription_service.state == 'pending'" class="badge badge-pill badge-success"><i class="fa fa-fw fa-check"/> In Progress</span>
-                                    <span t-if="subscription_service.state == 'pending'" class="badge badge-pill badge-warning"><i class="fa fa-fw fa-refresh"/> To Renew</span>
-                                    <span t-if="not subscription_service.state == 'open'" class="badge badge-pill badge-default"><i class="fa fa-fw fa-remove"/> Closed</span>
+                                    <span t-if="subscription.state == 'open' and not subscription.state == 'pending'" class="badge badge-pill badge-success"><i class="fa fa-fw fa-check"/> In Progress</span>
+                                    <span t-if="subscription.state == 'pending'" class="badge badge-pill badge-warning"><i class="fa fa-fw fa-refresh"/> To Renew</span>
+                                    <span t-if="not subscription.state == 'open'" class="badge badge-pill badge-default"><i class="fa fa-fw fa-remove"/> Closed</span>
                                 </div>
                             </div>
                         </div>
@@ -65,29 +65,29 @@
                                         <tbody style="white-space:nowrap">
                                             <tr>
                                                 <th class="text-right">Reference:</th>
-                                                <td class="w-100"><span t-field="subscription_service.code"/></td>
+                                                <td class="w-100"><span t-field="subscription.code"/></td>
                                             </tr>
                                             <tr>
                                                 <th class="text-right pb-0">Billing:</th>
                                                 <th class="w-100 pb-0">
-                                                    Every: <t t-esc="subscription_service.recurring_interval"/>
-                                                    <t t-if="subscription_service.recurrency=='daily'"> day(s) </t>
-                                                    <t t-if="subscription_service.recurrency=='weekly'"> week(s) </t>
-                                                    <t t-if="subscription_service.recurrency=='monthly'"> month(s) </t>
-                                                    <t t-if="subscription_service.recurrency=='yearly'"> year(s) </t>
+                                                    Every: <t t-esc="subscription.recurring_interval"/>
+                                                    <t t-if="subscription.recurrency=='daily'"> day(s) </t>
+                                                    <t t-if="subscription.recurrency=='weekly'"> week(s) </t>
+                                                    <t t-if="subscription.recurrency=='monthly'"> month(s) </t>
+                                                    <t t-if="subscription.recurrency=='yearly'"> year(s) </t>
                                                 </th>
                                             </tr>
-                                            <tr t-if="subscription_service.date_end">
+                                            <tr t-if="subscription.date_end">
                                                 <th class="text-right pb-0">Valid until:</th>
-                                                <td class="w-100 pb-0"><span t-field="subscription_service.date_end"/></td>
+                                                <td class="w-100 pb-0"><span t-field="subscription.date_end"/></td>
                                             </tr>
                                             <tr>
                                                 <th class="text-right pb-0">Start date:</th>
-                                                <td class="w-100 pb-0"><span t-field="subscription_service.date_start"/></td>
+                                                <td class="w-100 pb-0"><span t-field="subscription.date_start"/></td>
                                             </tr>
                                             <tr>
                                                 <th class="text-right pb-0">Next invoice:</th>
-                                                <td class="w-100 pb-0"><span t-field="subscription_service.recurring_next_date"/></td>
+                                                <td class="w-100 pb-0"><span t-field="subscription.recurring_next_date"/></td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -97,8 +97,8 @@
                                 <div class="col-12 col-lg-5 offset-lg-1">
                                     <h5 class="mb-1">Your informations</h5>
                                     <hr class="my-0"/>
-                                    <div t-field="subscription_service.partner_id" t-options='{ "widget": "contact", "fields": [ "name", "address", "phone", "email"]}'/>
-                                    <a t-if="subscription_service.partner_id" class="small" t-attf-href="/my/account?redirect=/my/subscriptions/#{subscription_service.id}">(Wrong address?)</a>
+                                    <div t-field="subscription.partner_id" t-options='{ "widget": "contact", "fields": [ "name", "address", "phone", "email"]}'/>
+                                    <a t-if="subscription.partner_id" class="small" t-attf-href="/my/subscription?redirect=/my/subscriptions/#{subscription.id}">(Wrong address?)</a>
                                 </div>
                             </div>
 
@@ -106,7 +106,7 @@
                             <div class="row">
                                 <div class="col-12 mt-4">
                                     <h5 class="mb-1">Plan details</h5>
-                                    <table class="table table-sm table-responsive-lg" id="wc-account-table">
+                                    <table class="table table-sm table-responsive-lg" id="wc-subscription-table">
                                         <thead>
                                             <tr>
                                                 <th/>
@@ -117,26 +117,26 @@
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <tr t-foreach="subscription_service.recurring_invoice_line_ids" t-as="line">
+                                            <tr t-foreach="subscription.recurring_invoice_line_ids" t-as="line">
                                                 <td class="line-description"><span t-field="line.name"/></td>
                                                 <td><t t-esc="line.qty"/> <span t-field="line.uom_id" data-oe-readonly="1"/></td>
-                                                <td t-if="not line.discount"><span t-esc="line.unit_price" t-options='{"widget": "monetary", "display_currency": subscription_service.currency_id}'/></td>
+                                                <td t-if="not line.discount"><span t-esc="line.unit_price" t-options='{"widget": "monetary", "display_currency": subscription.currency_id}'/></td>
                                                 <td t-if="line.discount">
-                                                    <s t-esc="line.unit_price" t-options='{"widget": "monetary", "display_currency": subscription_service.currency_id}'/><br/>
-                                                    <div><strong class="text-success" t-esc="line.unit_price*(100.0-line.discount)/100.0" t-options='{"widget": "monetary", "display_currency": subscription_service.currency_id}'/></div>
+                                                    <s t-esc="line.unit_price" t-options='{"widget": "monetary", "display_currency": subscription.currency_id}'/><br/>
+                                                    <div><strong class="text-success" t-esc="line.unit_price*(100.0-line.discount)/100.0" t-options='{"widget": "monetary", "display_currency": subscription.currency_id}'/></div>
                                                 </td>
                                                 <td t-attf-class="text-right {{ 'd-none d-md-table-cell' if report_type == 'html' else '' }}">
                                                     <span t-esc="', '.join(map(lambda x: (x.description or x.name), line.sub_line_tax_ids))"/>
                                                 </td>
-                                                <td><span t-esc="line.subtotal" t-options='{"widget": "monetary", "display_currency": subscription_service.currency_id}'/></td>
+                                                <td><span t-esc="line.subtotal" t-options='{"widget": "monetary", "display_currency": subscription.currency_id}'/></td>
                                             </tr>
                                         </tbody>
                                         <tfoot>
                                             <tr>
                                                 <td colspan="4" class="py-2">
                                                     Subtotal:<br/>
-                                                    <t t-if="subscription_service.partner_id">
-                                                        <a t-if="subscription_service.partner_id.country_id" class="small" t-attf-href="/my/account?redirect=/my/subscriptions/#{subscription_service.id}">(Not in <span t-field="subscription_service.partner_id.country_id" data-oe-readonly="1"/>?)</a>
+                                                    <t t-if="subscription.partner_id">
+                                                        <a t-if="subscription.partner_id.country_id" class="small" t-attf-href="/my/subscription?redirect=/my/subscriptions/#{subscription.id}">(Not in <span t-field="subscription.partner_id.country_id" data-oe-readonly="1"/>?)</a>
                                                         Taxes:<br/>
                                                     </t>
                                                     <t t-else="">
@@ -145,9 +145,9 @@
                                                     <strong>Next Billing Amount:</strong><br/>
                                                 </td>
                                                 <td class="py-2">
-                                                    <div t-field="subscription_service.amount_untaxed" t-options='{"widget": "monetary", "display_currency": subscription_service.currency_id}'/>
-                                                    <div t-field="subscription_service.recurring_amount_tax" t-options='{"widget": "monetary", "display_currency": subscription_service.currency_id}'/>
-                                                    <strong t-field="subscription_service.recurring_total" t-options='{"widget": "monetary", "display_currency": subscription_service.currency_id}'/>
+                                                    <div t-field="subscription.amount_untaxed" t-options='{"widget": "monetary", "display_currency": subscription.currency_id}'/>
+                                                    <div t-field="subscription.recurring_amount_tax" t-options='{"widget": "monetary", "display_currency": subscription.currency_id}'/>
+                                                    <strong t-field="subscription.recurring_total" t-options='{"widget": "monetary", "display_currency": subscription.currency_id}'/>
                                                 </td>
                                             </tr>
                                         </tfoot>
@@ -156,20 +156,20 @@
                             </div>
 
                             <!-- ======  Terms and conditions ====== -->
-                            <t t-if="subscription_service.description">
+                            <t t-if="subscription.description">
                                 <h4 class="mb-1">Terms and conditions</h4>
                                 <hr class="my-0"/>
-                                <div t-field="subscription_service.description"/>
+                                <div t-field="subscription.description"/>
                             </t>
                         </div>
                     </div>
                     <br/>
 
                     <!-- Open Invoices -->
-                    <div t-if="not subscription_service.invoice_ids.filtered(lambda inv: inv.state == 'open')">
+                    <div t-if="not subscription.invoice_ids.filtered(lambda inv: inv.state == 'open')">
                         <p></p>
                     </div>
-                    <div t-if="subscription_service.invoice_ids.filtered(lambda inv: inv.state == 'open')" t-call="portal.portal_table">
+                    <div t-if="subscription.invoice_ids.filtered(lambda inv: inv.state == 'open')" t-call="portal.portal_table">
                       <div class="card">
                         <h3>Open Invoices</h3>
                           <thead>
@@ -181,7 +181,7 @@
                                 <th class="text-right">Amount Due</th>
                             </tr>
                           </thead>
-                          <t t-foreach="subscription_service.invoice_ids.filtered(lambda inv: inv.state == 'open')" t-as="invoice">
+                          <t t-foreach="subscription.invoice_ids.filtered(lambda inv: inv.state == 'open')" t-as="invoice">
                             <tr>
                                 <td>
                                     <a t-att-href="invoice.get_portal_url()" t-att-title="invoice.number">
@@ -212,7 +212,7 @@
                     <div id="sale_order_communication" class="mt-4">
                         <h2>Communication</h2>
                         <t t-call="portal.message_thread">
-                            <t t-set="object" t-value="subscription_service"/>
+                            <t t-set="object" t-value="subscription"/>
                         </t>
                     </div>
                 </div>
@@ -223,10 +223,10 @@
                             <header class="modal-header">
                                 <h4 class="modal-title">Close your subscription</h4>
                             </header>
-                            <form method="post" t-attf-action="/my/subscription/#{subscription_service.id}/close">
+                            <form method="post" t-attf-action="/my/subscription/#{subscription.id}/close">
                                 <input class="d-none" name="csrf_token" t-att-value="request.csrf_token()"/>
                                 <main class="modal-body">
-                                    <p>If you confirm, you subscription will be closed right away. Your current invoicing period is valid until <span t-field="subscription_service.recurring_next_date"/>.</p>
+                                    <p>If you confirm, you subscription will be closed right away. Your current invoicing period is valid until <span t-field="subscription.recurring_next_date"/>.</p>
                                     <p>We always listen to our customer. Could you specify the reason for cancelling your subscription?</p>
                                     <div class="form-group">
                                         <textarea class="form-control" name="closing_text" style="width: 100%;" rows="4"></textarea>
@@ -247,9 +247,12 @@
     <!-- Modify portal templates -->
     <template id="portal_my_home_menu_subscription" name="Portal layout : subscription menu entry" inherit_id="portal.portal_breadcrumbs" priority="10">
         <xpath expr="//ol[hasclass('o_portal_submenu')]" position="inside">
-            <li t-if="page_name == 'subscription' or account" t-attf-class="breadcrumb-item #{'active ' if not account else ''}">
-                <a t-if="account" t-attf-href="/my/subscriptions?{{ keep_query() }}">Subscriptions</a>
+            <li t-if="page_name == 'Subscriptions' or subscription" t-attf-class="breadcrumb-item #{'active ' if not subscription else ''}">
+                <a t-if="subscription" t-attf-href="/my/subscriptions?{{ keep_query() }}">Subscriptions</a>
                 <t t-else="">Subscriptions</t>
+            </li>
+            <li t-if="subscription" t-attf-class="breadcrumb-item active">
+                <t t-esc="subscription.name"/>
             </li>
         </xpath>
     </template>
@@ -271,10 +274,10 @@
             <t t-call="portal.portal_searchbar">
                 <t t-set="title">Subscriptions</t>
             </t>
-            <t t-if="not accounts">
+            <t t-if="not subscriptions">
                 <p>You don't have any subscriptions yet.</p>
             </t>
-            <t t-if="accounts" t-call="portal.portal_table">
+            <t t-if="subscriptions" t-call="portal.portal_table">
                 <thead>
                     <tr class="active">
                         <th class="w-75">Subscription</th>
@@ -282,10 +285,10 @@
                         <th class="text-right">Total</th>
                     </tr>
                 </thead>
-                <t t-foreach="accounts" t-as="subscription">
+                <t t-foreach="subscriptions" t-as="subscription">
                     <tr>
                         <td>
-                            <a t-att-href="'/my/subscriptions/'+str(subscription.id)+'?'+keep_query()"><t t-esc="subscription.display_name"/></a>
+                            <a t-att-href="'/my/subscriptions/'+str(subscription.id)+'?'+keep_query()"><t t-esc="subscription.name"/></a>
                         </td>
                         <td class="text-center" id="subscription_state">
                             <t t-if="subscription.state == 'open' and not subscription.state == 'pending'">

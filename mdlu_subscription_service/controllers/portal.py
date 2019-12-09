@@ -72,8 +72,8 @@ class CustomerPortal(CustomerPortal):
         request.session['my_subscriptions_history'] = accounts.ids[:100]
 
         values.update({
-            'accounts': accounts,
-            'page_name': 'subscription',
+            'subscriptions': accounts,
+            'page_name': 'Subscriptions',
             'pager': pager,
             'archive_groups': archive_groups,
             'default_url': '/my/subscriptions',
@@ -102,7 +102,7 @@ class CustomerPortal(CustomerPortal):
             _message_post_helper(res_model='subscription.service', res_id=sbscr_sudo.id, message=body, token=sbscr_sudo.access_token, message_type='notification', subtype="mail.mt_note", partner_ids=sbscr_sudo.user_id.sudo().partner_id.ids)
         display_close = sbscr_sudo.state in ['open','pending']
         values = {
-            'subscription_service': sbscr_sudo,
+            'subscription': sbscr_sudo,
             'display_close': display_close,
             'message': message,
             'token': access_token,

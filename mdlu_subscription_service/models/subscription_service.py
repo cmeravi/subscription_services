@@ -24,7 +24,6 @@ PRODUCT_DOMAIN = {
     'purchase': 'po_subscription',
     'sale': 'so_subscription',
 }
-
 class SubscriptionService(models.Model):
     _name = 'subscription.service'
     _description = 'Subscription Service'
@@ -365,15 +364,9 @@ class SubscriptionServiceLine(models.Model):
     def _compute_unit_price(self):
         partner_id = self.subscription_serv_id.partner_id
         pricelist = partner_id.property_product_pricelist if partner_id.property_product_pricelist else False
-        item_price = 0.0
-        if 'sale' == self.sub_type:
-            item_price = self.product_id.list_price
-        elif 'purchase' == self.sub_type:
-            item_price = self.product_id.standard_price
+        item_price = self.product_id.list_price
         if pricelist and self.product_id and 'sale' == self.sub_type:
             item_price = pricelist.get_products_price(self.product_id,[self.qty],partner_id)[self.product_id.id]
-        elif 'purchase' == self.sub_type and partner_id in self.product_id.seller_ids.mapped('name'):
-            item_price = list(filter(lambda x: x.name == partner_id, self.product_id.seller_ids))[0].price
         self.unit_price = item_price
         if 'sale' == self.sub_type:
             self.sub_line_tax_ids |= self.product_id.taxes_id
