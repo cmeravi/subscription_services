@@ -17,6 +17,9 @@
     'author': "Moddulu Solutions",
     'license' : 'AGPL-3',
     'website': "https://www.moddulu.com",
+    'images': ['static/description/banner.png',],
+    'price': 40.00,
+    'currency': 'EUR',
 
     # Categories can be used to filter modules in modules listing
     # Check https://github.com/odoo/odoo/blob/12.0/odoo/addons/base/data/ir_module_category_data.xml
@@ -34,8 +37,7 @@
         'sales_team',
         'portal',
     ],
-    'price': 40.00,
-    'currency': 'USD',
+
 
     # always loaded
     'data': [
