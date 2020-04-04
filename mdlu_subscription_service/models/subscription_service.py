@@ -35,6 +35,15 @@ class SubscriptionService(models.Model):
         for sub in self:
             sub.invoice_count = len(sub.invoice_ids)
 
+    @api.onchange('type')
+    def _get_partner_domain(self):
+        domain = [()]
+        if self.type == 'purchase':
+            domain = [('supplier','=',True)]
+        elif self.type == 'sale':
+            domain = [('customer','=',True)]
+        return {'domain': {'partner_id': domain}}
+
     state = fields.Selection([('draft', 'New'),
                               ('open', 'In Progress'),
                               ('pending', 'To Renew'),

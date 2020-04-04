@@ -33,7 +33,7 @@
           <group name="main">
               <group>
                 <field name="type"/>
-                <field name="partner_id" required="1" domain="[('supplier', '=', True)]"/>
+                <field name="partner_id" required="1"/>
                 <field name="code"/>
                 <field name="recurrency"/>
                 <field name="recurring_interval"/>
