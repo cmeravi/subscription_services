@@ -10,7 +10,7 @@ class AccountInvoice(models.Model):
 
     @api.multi
     def action_invoice_cancel(self):
-        for inv in self.filtered(lambda i: i.subscription_id != False and i.state == 'open'):
+        for inv in self.filtered(lambda i: i.subscription_id and i.state == 'open'):
             sub = inv.subscription_id
             sub.recurring_next_date -= relativedelta(months=1)
             paid_inv_count = len(sub.invoice_ids.filtered(lambda i: i.state == 'paid'))
